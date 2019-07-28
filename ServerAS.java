@@ -67,13 +67,15 @@ private static byte[] keyShareTGT=new byte[]
 		try {
 			servidor = new ServerSocket(5000);
 			do {
-				cliente = servidor.accept();
-				System.out.println("Se ha establecido una conexión con el cliente " + cliente.getRemoteSocketAddress());
+				cliente = servidor.accept(); //Esperamos conexiones de los clientes
+				System.out.println("Se ha establecido una conexión con el cliente " + cliente.getRemoteSocketAddress()); //Obtenemos la ip del cliente
+
 				DataOutputStream salida = new DataOutputStream(cliente.getOutputStream());
 				DataInputStream entrada = new DataInputStream(cliente.getInputStream());
-				String recibido = entrada.readUTF();
+
+				String recibido = entrada.readUTF(); //Obtenemos la solicitud enviada por el cliente
 				System.out.println("Validando autenticación del cliente");
-				String desencriptado = ServerAS.decrypt(recibido);
+				String desencriptado = ServerAS.decrypt(recibido); //Desciframos los datos del cliente
 				System.out.println(desencriptado);
 				if(desencriptado.equals("Error"))
 					salida.writeUTF("Error de autenticacion"); //Si el server no puede descifrar la peticion

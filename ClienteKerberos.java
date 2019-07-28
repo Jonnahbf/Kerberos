@@ -13,12 +13,12 @@ public class ClienteKerberos {
 
 private static String algorithm = "AES";
 private static byte[] keyShareAS=new byte[] 
-{ 'A', 'S', 'e', 'c', 'u', 'r', 'e', 'S', 'e', 'c', 'r', 'e', 't', 'K', 'e', 'y' };
+{ 'A', 'S', 'e', 'c', 'u', 'r', 'e', 'S', 'e', 'c', 'r', 'e', 't', 'K', 'e', 'y' }; //Clave compartida con el server AS
 
  // Performs Encryption
         public static String encrypt(String plainText) throws Exception 
         {
-                Key key = generateKey();
+                Key key = generateKey(); //Invocamos al método generateKey()
                 Cipher chiper = Cipher.getInstance(algorithm);
                 chiper.init(Cipher.ENCRYPT_MODE, key);
                 byte[] encVal = chiper.doFinal(plainText.getBytes());
@@ -39,7 +39,7 @@ private static byte[] keyShareAS=new byte[]
                 return decryptedValue;
         }
 
-//generateKey() is used to generate a secret key for AES algorithm
+//generateKey() genera una clave secreta para el algoritmo AES
         private static Key generateKey() throws Exception 
         {
                 Key key = new SecretKeySpec(keyShareAS, algorithm);
