@@ -32,7 +32,7 @@ private static byte[] keyShareServidor=new byte[]
 		        chiper.init(Cipher.DECRYPT_MODE, key);
 		        byte[] decordedValue = new BASE64Decoder().decodeBuffer(encryptedText);
 		        byte[] decValue = chiper.doFinal(decordedValue);
-		        String decryptedValue = new BASE64Encoder().encode(decValue);
+		        String decryptedValue = new String(decValue);
 		        return decryptedValue;
 		    }
 		    catch(Exception error){
