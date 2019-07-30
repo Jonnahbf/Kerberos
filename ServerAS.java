@@ -7,6 +7,7 @@ import javax.crypto.spec.SecretKeySpec;
 import sun.misc.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.net.InetAddress;
 
 
 public class ServerAS {
@@ -18,7 +19,15 @@ private static byte[] keyShareAS=new byte[]
 private static byte[] keyShareTGT=new byte[] 
 { 'P', 'Q', 'd', 'a', 'v', 'q', 'e', 'S', 'j', 'k', 'l', 'm', 't', 'K', 'z', 'y' }; //Clave secreta compartida entre el server AS y el server TGT
 
- // Performs Encryption
+
+
+	public static void DefinirCliente(int cliente){
+		if(cliente == 0){
+			keyShareAS = new byte[] 
+{ 'A', 'S', 'e', 'c', 'u', 'r', 'e', 'S', 'e', 'c', 'r', 'e', 't', 'K', 'e', 'y' };
+		}
+	}
+
         public static String encrypt(String plainText) throws Exception 
         {
                 Key key = generateKey(0);
@@ -29,7 +38,7 @@ private static byte[] keyShareTGT=new byte[]
                 return encryptedValue;
         }
 
-        // Performs decryption
+        
         public static String decrypt(String encryptedText) throws Exception 
         {
                 // generate key 
@@ -69,9 +78,19 @@ private static byte[] keyShareTGT=new byte[]
 			do {
 				cliente = servidor.accept(); //Esperamos conexiones de los clientes
 				System.out.println("Se ha establecido una conexión con el cliente " + cliente.getRemoteSocketAddress()); //Obtenemos la ip del cliente
-
+				
 				DataOutputStream salida = new DataOutputStream(cliente.getOutputStream());
 				DataInputStream entrada = new DataInputStream(cliente.getInputStream());
+
+				//Convertimos la IP a String
+				String ip=(((InetSocketAddress) cliente.getRemoteSocketAddress()).getAddress()).toString().replace("/","");
+				
+				if(ip.equals("127.0.0.1")){
+					ServerAS.DefinirCliente(1);
+				}
+				else{
+					ServerAS.DefinirCliente(0);
+				}
 
 				String recibido = entrada.readUTF(); //Obtenemos la solicitud enviada por el cliente
 				System.out.println("Validando autenticación del cliente");
