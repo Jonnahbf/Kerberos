@@ -32,7 +32,7 @@ private static byte[] keyShareServidor=new byte[]
 		        chiper.init(Cipher.DECRYPT_MODE, key);
 		        byte[] decordedValue = new BASE64Decoder().decodeBuffer(encryptedText);
 		        byte[] decValue = chiper.doFinal(decordedValue);
-		        String decryptedValue = new BASE64Encoder().encode(encVal);;
+		        String decryptedValue = new BASE64Encoder().encode(decValue);
 		        return decryptedValue;
 		    }
 		    catch(Exception error){
@@ -73,7 +73,7 @@ private static byte[] keyShareServidor=new byte[]
 				String desencriptado = Servidor.decrypt(recibido);
 				System.out.println(desencriptado);
 
-				if(desencriptado.equals("Error")) //Si ocurrio un error al descifrar el token
+				if(desencriptado.equals("Error")){ //Si ocurrio un error al descifrar el token
 					salida.writeUTF("Error de autenticacion"); //Enviamos msj de error
 					System.out.println("La validacion del cliente ha sido exitosa");
 					salida.writeUTF("Autenticación realizada con éxito"); //Enviamos msj de exito
