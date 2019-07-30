@@ -75,6 +75,9 @@ private static byte[] keyShareServidor=new byte[]
 
 				if(desencriptado.equals("Error")){ //Si ocurrio un error al descifrar el token
 					salida.writeUTF("Error de autenticacion"); //Enviamos msj de error
+					
+				}
+				else{
 					System.out.println("La validacion del cliente ha sido exitosa");
 					salida.writeUTF("Autenticación realizada con éxito"); //Enviamos msj de exito
 				}

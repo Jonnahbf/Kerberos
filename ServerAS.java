@@ -99,7 +99,8 @@ private static byte[] keyShareTGT=new byte[]
 				else{ //Si todo salio bien
 					System.out.println("Cliente autenticado correctamente");
 					String Ticket = "Ticket para el cliente 127.0.0.1";
-					String ticketCifrado = ServerAS.encrypt(Ticket); //Enviamos el ticket cifrado					salida.writeUTF(ticketCifrado);
+					String ticketCifrado = ServerAS.encrypt(Ticket); //Enviamos el ticket cifrado					
+					salida.writeUTF(ticketCifrado);
 				}
 				cliente.close(); //Cerramos conexion
 			} while (true);
