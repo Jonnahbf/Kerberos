@@ -14,9 +14,8 @@ private static String algorithm = "AES";
 private static byte[] keyShareServidor=new byte[] 
 { 'P', 'M', 'k', 'z', 'z', 's', 'a', 'q', 'j', 'd', 'q', 'p', 'd', 'K', 'd', 'k' }; //Clave secreta compartida entre el server TGT y el Servidor
 
- // Performs Encryption
-        public static String encrypt(String plainText) throws Exception 
-        {
+		//Metodo para cifrar
+        public static String encrypt(String plainText) throws Exception {
                 Key key = generateKey();
                 Cipher chiper = Cipher.getInstance(algorithm);
                 chiper.init(Cipher.ENCRYPT_MODE, key);
@@ -25,17 +24,15 @@ private static byte[] keyShareServidor=new byte[]
                 return encryptedValue;
         }
 
-        // Performs decryption
-        public static String decrypt(String encryptedText) throws Exception 
-        {
-                // generate key 
+       //Metodo para descifrar
+        public static String decrypt(String encryptedText) throws Exception {
 		    try{
 		        Key key = generateKey();
 		        Cipher chiper = Cipher.getInstance(algorithm);
 		        chiper.init(Cipher.DECRYPT_MODE, key);
 		        byte[] decordedValue = new BASE64Decoder().decodeBuffer(encryptedText);
 		        byte[] decValue = chiper.doFinal(decordedValue);
-		        String decryptedValue = new String(decValue);
+		        String decryptedValue = new BASE64Encoder().encode(encVal);;
 		        return decryptedValue;
 		    }
 		    catch(Exception error){
@@ -44,7 +41,7 @@ private static byte[] keyShareServidor=new byte[]
 		    }
         }
 
-//generateKey() is used to generate a secret key for AES algorithm
+		//Metodo para generar la clave secreta
         private static Key generateKey() throws Exception  {
             Key key = new SecretKeySpec(keyShareServidor, algorithm);
             return key;
@@ -56,23 +53,32 @@ private static byte[] keyShareServidor=new byte[]
 		ServerSocket servidor;
 		Socket cliente;
 		try {
-			servidor = new ServerSocket(9000);
+			servidor = new ServerSocket(9000); //Esperaremos conexiones en el puerto 9000
 			do {
-				cliente = servidor.accept();
+				cliente = servidor.accept(); //Esperando conexiones de los clientes
+
+				//Imprimimos la IP del cliente conectado
 				System.out.println("Se ha establecido una conexión con el cliente " + cliente.getRemoteSocketAddress());
+
+				//Establecemos los flujos de salida
 				DataOutputStream salida = new DataOutputStream(cliente.getOutputStream());
+				//Establecemos los flujos de salida
 				DataInputStream entrada = new DataInputStream(cliente.getInputStream());
+
+				//Recibimos el token enviado por el cliente
 				String recibido = entrada.readUTF();
 				System.out.println("Validando autenticación del cliente");
+
+				//Desciframos el token
 				String desencriptado = Servidor.decrypt(recibido);
 				System.out.println(desencriptado);
-				if(desencriptado.equals("Error"))
-					salida.writeUTF("Error de autenticacion"); //Si el server no puede descifrar la peticion
-				else{
+
+				if(desencriptado.equals("Error")) //Si ocurrio un error al descifrar el token
+					salida.writeUTF("Error de autenticacion"); //Enviamos msj de error
 					System.out.println("La validacion del cliente ha sido exitosa");
-					salida.writeUTF("Autenticación realizada con éxito");
+					salida.writeUTF("Autenticación realizada con éxito"); //Enviamos msj de exito
 				}
-				cliente.close();
+				cliente.close(); //Cerramos la conexion
 			} while (true);
 		}
 		catch (Exception e) {

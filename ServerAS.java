@@ -22,14 +22,14 @@ private static byte[] keyShareTGT=new byte[]
 
 
 	public static void DefinirCliente(int cliente){
-		if(cliente == 0){
+		if(cliente == 0){ //Si cliente vale 0 cambiamos la clave porque es otro cliente
 			keyShareAS = new byte[] 
-{ 'A', 'S', 'e', 'c', 'u', 'r', 'e', 'S', 'e', 'c', 'r', 'e', 't', 'K', 'e', 'y' };
+			{ 'd', 'p', 'f', 'k', 'j', 'a', 'e', 'S', 'e', 'c', 'r', 'e', 't', 'K', 'e', 'y' };
 		}
 	}
 
-        public static String encrypt(String plainText) throws Exception 
-        {
+	//Metodo para cifrar
+        public static String encrypt(String plainText) throws Exception {
                 Key key = generateKey(0);
                 Cipher chiper = Cipher.getInstance(algorithm);
                 chiper.init(Cipher.ENCRYPT_MODE, key);
@@ -38,17 +38,15 @@ private static byte[] keyShareTGT=new byte[]
                 return encryptedValue;
         }
 
-        
-        public static String decrypt(String encryptedText) throws Exception 
-        {
-                // generate key 
+        //Metodo para descifrar
+        public static String decrypt(String encryptedText) throws Exception {
 		try{
 		        Key key = generateKey(1);
 		        Cipher chiper = Cipher.getInstance(algorithm);
 		        chiper.init(Cipher.DECRYPT_MODE, key);
 		        byte[] decordedValue = new BASE64Decoder().decodeBuffer(encryptedText);
 		        byte[] decValue = chiper.doFinal(decordedValue);
-		        String decryptedValue = new String(decValue);
+		        String decryptedValue = new BASE64Encoder().encode(encVal);
 		        return decryptedValue;
 		}
 		catch(Exception error){
@@ -57,9 +55,8 @@ private static byte[] keyShareTGT=new byte[]
 		}
         }
 
-//generateKey() is used to generate a secret key for AES algorithm
-        private static Key generateKey(int tipo) throws Exception 
-        {
+	//Metodo para generar la clave secreta
+        private static Key generateKey(int tipo) throws Exception{
 		Key key;
 		if(tipo==1)
                 	key = new SecretKeySpec(keyShareAS, algorithm);
@@ -74,18 +71,19 @@ private static byte[] keyShareTGT=new byte[]
 		ServerSocket servidor;
 		Socket cliente;
 		try {
-			servidor = new ServerSocket(5000);
+			servidor = new ServerSocket(5000); //Aceptaremos conexiones en el puerto 5000
 			do {
 				cliente = servidor.accept(); //Esperamos conexiones de los clientes
 				System.out.println("Se ha establecido una conexión con el cliente " + cliente.getRemoteSocketAddress()); //Obtenemos la ip del cliente
 				
+				//Establecemos los flujos de entrada y salida
 				DataOutputStream salida = new DataOutputStream(cliente.getOutputStream());
 				DataInputStream entrada = new DataInputStream(cliente.getInputStream());
 
 				//Convertimos la IP a String
 				String ip=(((InetSocketAddress) cliente.getRemoteSocketAddress()).getAddress()).toString().replace("/","");
 				
-				if(ip.equals("127.0.0.1")){
+				if(ip.equals("127.0.0.1")){ //Si el cliente tiene la ip 127.0.0.1
 					ServerAS.DefinirCliente(1);
 				}
 				else{
@@ -95,16 +93,15 @@ private static byte[] keyShareTGT=new byte[]
 				String recibido = entrada.readUTF(); //Obtenemos la solicitud enviada por el cliente
 				System.out.println("Validando autenticación del cliente");
 				String desencriptado = ServerAS.decrypt(recibido); //Desciframos los datos del cliente
-				System.out.println(desencriptado);
+				System.out.println(desencriptado); //Imprimimos la peticion descifrada
 				if(desencriptado.equals("Error"))
-					salida.writeUTF("Error de autenticacion"); //Si el server no puede descifrar la peticion
-				else{
+					salida.writeUTF("Error"); //Si el server no puede descifrar la peticion
+				else{ //Si todo salio bien
 					System.out.println("Cliente autenticado correctamente");
 					String Ticket = "Ticket para el cliente 127.0.0.1";
-					String ticketCifrado = ServerAS.encrypt(Ticket);
-					salida.writeUTF(ticketCifrado);
+					String ticketCifrado = ServerAS.encrypt(Ticket); //Enviamos el ticket cifrado					salida.writeUTF(ticketCifrado);
 				}
-				cliente.close();
+				cliente.close(); //Cerramos conexion
 			} while (true);
 		}
 		catch (Exception e) {

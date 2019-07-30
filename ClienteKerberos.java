@@ -15,7 +15,7 @@ private static String algorithm = "AES";
 private static byte[] keyShareAS=new byte[] 
 { 'A', 'S', 'e', 'c', 'u', 'r', 'e', 'S', 'e', 'c', 'r', 'e', 't', 'K', 'e', 'y' }; //Clave compartida con el server AS
 
- // Performs Encryption
+        //Metodo para cifrar
         public static String encrypt(String plainText) throws Exception 
         {
                 Key key = generateKey(); //Invocamos al método generateKey()
@@ -26,7 +26,7 @@ private static byte[] keyShareAS=new byte[]
                 return encryptedValue;
         }
 
-        // Performs decryption
+        //Metodo para descifrar
         public static String decrypt(String encryptedText) throws Exception 
         {
                 // generate key 
@@ -35,11 +35,11 @@ private static byte[] keyShareAS=new byte[]
                 chiper.init(Cipher.DECRYPT_MODE, key);
                 byte[] decordedValue = new BASE64Decoder().decodeBuffer(encryptedText);
                 byte[] decValue = chiper.doFinal(decordedValue);
-                String decryptedValue = new String(decValue);
+                String decryptedValue = new BASE64Encoder().encode(encVal);
                 return decryptedValue;
         }
 
-//generateKey() genera una clave secreta para el algoritmo AES
+        //Metodo para generar la clave secreta
         private static Key generateKey() throws Exception 
         {
                 Key key = new SecretKeySpec(keyShareAS, algorithm);
@@ -55,10 +55,15 @@ private static byte[] keyShareAS=new byte[]
 
                         System.out.println("Estableciendo comunicación con el server AS");
 
+                        //Establecemos los flujos de salida con el serverAS
                         DataOutputStream salida = new DataOutputStream(socket.getOutputStream());
+                        //Establecemos los flujos de entrada con el serverAS
 			DataInputStream entrada = new DataInputStream(socket.getInputStream());
 
+                        //Definimos la peticion
 			String str = "Soy el cliente 127.0.0.1 y quiero un ticket para comunicarme con el servidor 192.168.8.102";
+
+                        //Ciframos la peticion
 			String textoCifrado = ClienteKerberos.encrypt(str);
 
                         System.out.println("Enviando solicitud al server AS");
@@ -66,37 +71,67 @@ private static byte[] keyShareAS=new byte[]
 			salida.writeUTF(textoCifrado); //Enviamos la solicitud cifrada al server AS
 
 			String recibido = entrada.readUTF(); //El cliente recibe lo que le envia el server AS
-                        System.out.println("Recibiendo el Ticker del server AS");
-			
-			Socket socketTGT = new Socket(argv[0], 8000); //El cliente abre una conexión con el server TGT
 
-                        System.out.println("Estableciendo comunicación con el server TGT");
+                        //Si el serverAS no puede descifrar la peticion
+                        if(recibido.equals("Error")){
+                                System.out.println("Error de autenticacion con el serverAS"); //Imprimimos un msj de error
+                                socket.close(); //Terminamos la aplicacion
+                        }
+                        else{
+                                System.out.println("Recibiendo el Ticker del server AS");
+                                //Establecemos una conexion con el serverTGT
+                                Socket socketTGT = new Socket(argv[0], 8000); //El cliente abre una conexión con el server TGT
 
-                        DataOutputStream salidaTGT = new DataOutputStream(socketTGT.getOutputStream());
-			DataInputStream entradaTGT = new DataInputStream(socketTGT.getInputStream());
+                                System.out.println("Estableciendo comunicación con el server TGT");
 
-                        System.out.println("Enviando Ticket al servidor TGT");
-			salidaTGT.writeUTF(recibido); //Envia el ticket recibido del server AS
+                                //Cerramos la conexion con el serverAS
+                                socket.close();
 
-                        String token = entradaTGT.readUTF();
-                        System.out.println("Recibiendo Token del servidor TGT");
+                                //Establecemos los flujos de salida para el serverTGT
+                                DataOutputStream salidaTGT = new DataOutputStream(socketTGT.getOutputStream());
+                                //Establecemos los flujos de entrada para el serverTGT
+                                DataInputStream entradaTGT = new DataInputStream(socketTGT.getInputStream());
 
-                        Socket socketServidor = new Socket(argv[0], 9000);
-                        System.out.println("Estableciendo comunicación con el servidor");
+                                System.out.println("Enviando Ticket al servidor TGT");
+                                salidaTGT.writeUTF(recibido); //Envia el ticket recibido del server AS
 
-                        DataOutputStream salidaServidor = new DataOutputStream(socketServidor.getOutputStream());
-			DataInputStream entradaServidor = new DataInputStream(socketServidor.getInputStream());
+                                //Recibimos la respuesta del serverTGT
+                                String token = entradaTGT.readUTF();
 
-			salidaServidor.writeUTF(token);
-                        System.out.println("Enviando el token al servidor");
+                                if(token.equals("Error")){ //Si el serverTGT no pudo descfrar el ticket
+                                        System.out.println("Error de autenticacion con el serverTGT");
+                                }
+                                else{
+                                        System.out.println("Recibiendo Token del servidor TGT");
 
-                        String resultado = entradaServidor.readUTF();
-                        System.out.println("Recibiendo respuesta del servidor");
-                        System.out.println(resultado);
+                                        //Establecemos conexion con el servidor que nos queremos comunicar
+                                        Socket socketServidor = new Socket(argv[0], 9000);
+                                        System.out.println("Estableciendo comunicación con el servidor");
+                                        //Cerramos conexion con el serverTGT
+                                        socketTGT.close();
 
-			socket.close();
-                        socketServidor.close();
-                        socketTGT.close();
+                                        //Establecemos los flujos de salida para el servidor
+                                        DataOutputStream salidaServidor = new DataOutputStream(socketServidor.getOutputStream());
+                                        //Establecemos los flujos de entrada para el servidor
+                                        DataInputStream entradaServidor = new DataInputStream(socketServidor.getInputStream());
+
+
+                                        //Enviamos el token al servidor
+                                        salidaServidor.writeUTF(token);
+                                        System.out.println("Enviando el token al servidor");
+
+                                        //Recibimos respuesta del servidor
+                                        String resultado = entradaServidor.readUTF();
+                                        System.out.println("Recibiendo respuesta del servidor");
+
+                                        //Imprimimos la respuesta enviada por el servidor
+                                        System.out.println(resultado);
+
+                                        //Cerramos conexion
+                                        socketServidor.close();
+                                }
+                        }
+
 		}
 		catch (Exception e) {
 			e.printStackTrace();
